@@ -18,14 +18,6 @@ const (
 	TraverseAll  = TraverseLeaves | TraverseNonLeaves
 )
 
-type Data struct {
-	Title string
-}
-
-func (d *Data) String() string {
-	return d.Title
-}
-
 type TraverseFunc[T comparable] func(*Node[T]) bool
 type TraverseType int
 type TraverseFlags int
