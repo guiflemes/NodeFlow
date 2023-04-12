@@ -3,54 +3,8 @@ package main
 import (
 	"errors"
 	"flowChart/domain"
+	"sync"
 )
-
-// type position struct {
-// 	X float64
-// 	Y float64
-// }
-
-// type nodeRep struct {
-// 	Id int
-// }
-
-// type relationship struct {
-// 	Id     int
-// 	FromId int
-// 	ToID   int
-// }
-
-// type rep struct {
-// 	Nodes         []nodeRep
-// 	Relationships []relationship
-// }
-
-// func NewRep() *rep {
-// 	return &rep{
-// 		Nodes:         make([]nodeRep, 0),
-// 		Relationships: make([]relationship, 0),
-// 	}
-// }
-
-// func Representation[T comparable](n *Node[T]) {
-// 	rep := NewRep()
-
-// 	n.Traverse(TraversePreOrder, TraverseAll, -1, func(n *Node[T]) bool {
-// 		nodeP := n.parent
-// 		for nodeP != nil {
-// 			nodeRep := &nodeRep{Id: nodeP.nodeID}
-// 			rep.Nodes = append(rep.Nodes, *nodeRep)
-
-// 			if !nodeP.IsRoot() {
-
-// 			}
-// 			nodeP = nodeP.parent
-
-// 		}
-
-// 		return true
-// 	})
-// }
 
 type FlowChartDto[T comparable] struct {
 	Nodes []*NodeDto[T] `json:"nodes"`
@@ -80,12 +34,14 @@ type EdgeDto struct {
 }
 
 func toDomain[T comparable](flowChart *FlowChartDto[T]) (*domain.FlowChart[T], error) {
+	m := sync.RWMutex{}
 
 	nodeMap := func() map[string]*domain.Node[T] {
 		nodeM := make(map[string]*domain.Node[T], len(flowChart.Nodes))
 		for _, n := range flowChart.Nodes {
-
+			m.Lock()
 			nodeM[n.Id] = domain.NewNode(n.Id, n.Data, domain.Position{X: n.Position.X, Y: n.Position.Y})
+			m.Unlock()
 		}
 		return nodeM
 	}()
@@ -94,27 +50,34 @@ func toDomain[T comparable](flowChart *FlowChartDto[T]) (*domain.FlowChart[T], e
 	var root *domain.Node[T]
 
 	for _, edge := range flowChart.Edges {
-		parent, ok := nodeMap[edge.Source]
 
-		if !ok {
-			return flow, errors.New("Parent Not Found") // returns some error
+		if err := func() error {
+			m.RLock()
+			defer m.RUnlock()
+			parent, ok := nodeMap[edge.Source]
+
+			if !ok {
+				return errors.New("Parent Not Found")
+			}
+
+			if edge.Source == "0" {
+				root = parent
+			}
+
+			if child, ok := nodeMap[edge.Id]; ok {
+				parent.AddChild(child)
+				return nil
+			}
+
+			return errors.New("Child Not Found")
+
+		}(); err != nil {
+			return flow, err
 		}
-
-		if edge.Source == "1" {
-			root = parent
-		}
-
-		if child, ok := nodeMap[edge.Id]; ok {
-			parent.AddChild(child)
-			continue
-		}
-
-		return flow, errors.New("Child Not Found")
 
 	}
 
-	flow.Node = root
-	return flow, nil
+	return &domain.FlowChart[T]{Node: root}, nil
 }
 
 var flowChartJson string = `{

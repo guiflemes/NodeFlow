@@ -15,11 +15,7 @@ func (d *Data) String() string {
 
 func main() {
 	dto := &FlowChartDto[Data]{}
-	err := json.Unmarshal([]byte(flowChartJson), dto)
-	fmt.Println(err)
-	fmt.Println(dto.Nodes)
-	domain, err := toDomain(dto)
-
-	fmt.Println("errDomain", err)
+	json.Unmarshal([]byte(flowChartJson), dto)
+	domain, _ := toDomain(dto)
 	fmt.Println("resultDomain", domain)
 }
