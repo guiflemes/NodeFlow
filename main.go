@@ -1,29 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Data struct {
-	Title string
+	Label string `json:"label"`
 }
 
 func (d *Data) String() string {
-	return d.Title
+	return d.Label
 }
 
 func main() {
-	root := NewNode(Data{"cocoRoot"})
-	coco := NewNode(Data{"coco"})
-	xixi := NewNode(Data{"xixi"})
+	dto := &FlowChartDto[Data]{}
+	err := json.Unmarshal([]byte(flowChartJson), dto)
+	fmt.Println(err)
+	fmt.Println(dto.Nodes)
+	domain, err := toDomain(dto)
 
-	root.AddChild(coco)
-	root.AddChild(xixi)
-
-	xixiA := NewNode(Data{"xixiA"})
-	xixiB := NewNode(Data{"xixiB"})
-
-	xixi.AddChild(xixiA)
-	xixi.AddChild(xixiB)
-
-	fmt.Println(root.IsRoot())
-
+	fmt.Println("errDomain", err)
+	fmt.Println("resultDomain", domain)
 }

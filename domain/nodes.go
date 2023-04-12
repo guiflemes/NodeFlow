@@ -1,4 +1,4 @@
-package main
+package domain
 
 import (
 	"fmt"
@@ -22,17 +22,26 @@ type TraverseFunc[T comparable] func(*Node[T]) bool
 type TraverseType int
 type TraverseFlags int
 
+type Position struct {
+	X float64
+	Y float64
+}
+
 type Node[T comparable] struct {
-	data     T
+	nodeID   string
+	Data     T
+	position Position
 	next     *Node[T]
 	previous *Node[T]
 	parent   *Node[T]
 	children *Node[T]
 }
 
-func NewNode[T comparable](data T) *Node[T] {
+func NewNode[T comparable](nodeID string, data T, position Position) *Node[T] {
 	return &Node[T]{
-		data: data,
+		nodeID:   nodeID,
+		Data:     data,
+		position: position,
 	}
 }
 
@@ -50,10 +59,10 @@ func (n *Node[T]) Depth() int {
 }
 
 func (n *Node[T]) AddChild(child *Node[T]) *Node[T] {
-	var node *Node[T]
+	var Node *Node[T]
 
 	if !child.IsRoot() {
-		return node
+		return Node
 	}
 
 	child.parent = n
@@ -65,10 +74,10 @@ func (n *Node[T]) AddChild(child *Node[T]) *Node[T] {
 		}
 		child.previous = sibling
 		sibling.next = child
-		return node
+	} else {
+		child.parent.children = child
 	}
 
-	child.parent.children = child
 	return child
 }
 
@@ -339,9 +348,9 @@ func (n *Node[T]) String() string {
 
 	levels := []string{""}
 
-	n.Traverse(TraversePreOrder, TraverseAll, -1, func(node *Node[T]) bool {
+	n.Traverse(TraversePreOrder, TraverseAll, -1, func(Node *Node[T]) bool {
 		currentLevel := 0
-		nodeP := node.parent
+		nodeP := Node.parent
 		for nodeP != nil {
 			currentLevel++
 			if len(levels) <= currentLevel {
@@ -349,7 +358,7 @@ func (n *Node[T]) String() string {
 			}
 			nodeP = nodeP.parent
 		}
-		levels[currentLevel] += fmt.Sprintf("(%v)", node.data) + "\t"
+		levels[currentLevel] += fmt.Sprintf("nodeID=%s data=(%v)", Node.nodeID, Node.Data) + "\t"
 		return false
 
 	})
