@@ -28,21 +28,38 @@ type Position struct {
 }
 
 type Node[T comparable] struct {
-	nodeID   string
-	Data     T
-	position Position
-	next     *Node[T]
-	previous *Node[T]
-	parent   *Node[T]
-	children *Node[T]
+	NodeID           string
+	Data             T
+	Position         Position
+	Width            int16
+	Height           int16
+	Selected         bool
+	PositionAbsolute Position
+	Dragging         bool
+	next             *Node[T]
+	previous         *Node[T]
+	parent           *Node[T]
+	children         *Node[T]
 }
 
-func NewNode[T comparable](nodeID string, data T, position Position) *Node[T] {
+func NewNode[T comparable](nodeID string, data T, position Position, width int16, height int16, selected bool, positionAbsolute Position, dragging bool) *Node[T] {
 	return &Node[T]{
-		nodeID:   nodeID,
-		Data:     data,
-		position: position,
+		NodeID:           nodeID,
+		Data:             data,
+		Position:         position,
+		Width:            width,
+		Height:           height,
+		Selected:         selected,
+		PositionAbsolute: positionAbsolute,
+		Dragging:         dragging,
 	}
+}
+
+func (n *Node[T]) ParentId() string {
+	if n.IsRoot() {
+		return "0"
+	}
+	return n.parent.NodeID
 }
 
 func (n *Node[T]) IsRoot() bool {
@@ -94,28 +111,22 @@ func (n *Node[T]) GetRoot() (*Node[T], int) {
 }
 
 func (n *Node[T]) traversePreOrder(flags TraverseFlags, traverseFunc TraverseFunc[T]) bool {
-
-	if n.children != nil {
-		func() bool {
-			if flags&TraverseNonLeaves != 0 && traverseFunc(n) {
-				return true
-			}
-
-			child := n.children
-			for child != nil {
-				current := child
-				child = current.next
-				if current.traversePreOrder(flags, traverseFunc) {
-					return true
-				}
-			}
-
-			return false
-		}()
-
+	// First, apply the function to the current node if the flag is set
+	if flags&TraverseNonLeaves != 0 && traverseFunc(n) {
+		return true
 	}
 
-	if flags&TraverseNonLeaves != 0 && traverseFunc(n) {
+	// Traverse the children recursively
+	child := n.children
+	for child != nil {
+		if child.traversePreOrder(flags, traverseFunc) {
+			return true
+		}
+		child = child.next
+	}
+
+	// If the flag is set, apply the function to the current node again
+	if flags&TraverseNonLeaves == 0 && traverseFunc(n) {
 		return true
 	}
 
@@ -358,7 +369,7 @@ func (n *Node[T]) String() string {
 			}
 			nodeP = nodeP.parent
 		}
-		levels[currentLevel] += fmt.Sprintf("nodeID=%s data=(%v)", Node.nodeID, Node.Data) + "\t"
+		levels[currentLevel] += fmt.Sprintf("NodeID=%s data=(%v)", Node.NodeID, Node.Data) + "\t"
 		return false
 
 	})

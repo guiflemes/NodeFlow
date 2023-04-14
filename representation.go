@@ -7,6 +7,7 @@ import (
 )
 
 type FlowChartDto[T comparable] struct {
+	Title string        `json:"title"`
 	Nodes []*NodeDto[T] `json:"nodes"`
 	Edges []*EdgeDto    `json:"Edges"`
 }
@@ -40,7 +41,8 @@ func toDomain[T comparable](flowChart *FlowChartDto[T]) (*domain.FlowChart[T], e
 		nodeM := make(map[string]*domain.Node[T], len(flowChart.Nodes))
 		for _, n := range flowChart.Nodes {
 			m.Lock()
-			nodeM[n.Id] = domain.NewNode(n.Id, n.Data, domain.Position{X: n.Position.X, Y: n.Position.Y})
+			nodeM[n.Id] = domain.NewNode(n.Id, n.Data, domain.Position{X: n.Position.X, Y: n.Position.Y},
+				n.Width, n.Height, n.Selected, domain.Position{X: n.PositionAbsolute.X, Y: n.PositionAbsolute.Y}, n.Dragging)
 			m.Unlock()
 		}
 		return nodeM
@@ -77,10 +79,11 @@ func toDomain[T comparable](flowChart *FlowChartDto[T]) (*domain.FlowChart[T], e
 
 	}
 
-	return &domain.FlowChart[T]{Node: root}, nil
+	return &domain.FlowChart[T]{Title: flowChart.Title, Node: root}, nil
 }
 
 var flowChartJson string = `{
+	"title": "firstFlow",
 	"nodes": [
 	{
 		"id": "0",
