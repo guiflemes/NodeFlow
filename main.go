@@ -3,32 +3,22 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flowChart/repository"
+	"flowChart/adapters"
+	"flowChart/handlers"
+	"flowChart/ports"
 	"fmt"
-	"time"
 )
 
-type Data struct {
-	Label string `json:"label"`
-}
-
-func (d *Data) String() string {
-	return d.Label
-}
-
 func main() {
-	config := &repository.Database{}
+	config := &adapters.DatabaseConfig{}
 	config.Parse()
-	repo := repository.NewPostgresRepo[Data](config)
+	repo := adapters.NewFlowChartDataRepo(config)
 
-	dto := &FlowChartDto[Data]{}
-	json.Unmarshal([]byte(flowChartJson), dto)
-	domain, _ := toDomain(dto)
+	dto := &ports.FlowChartDto[ports.Data]{}
+	json.Unmarshal([]byte(ports.FlowChartJson), dto)
+	domain, _ := handlers.ToDomain(dto)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	err := repo.Store(ctx, domain)
+	err := repo.StoreFlowChart(context.Background(), domain)
 	fmt.Println(err)
 
 }
