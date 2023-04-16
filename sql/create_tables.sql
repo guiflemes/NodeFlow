@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS flowchart (
     created_at   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     title        varchar NOT NULL,
+    key        varchar(50) UNIQUE,
     PRIMARY KEY (id)
 );
 
@@ -26,5 +27,6 @@ CREATE TABLE IF NOT EXISTS node (
     flowchart_id uuid NOT NULL,
     CONSTRAINT   flowchart_pk FOREIGN KEY (flowchart_id) REFERENCES flowchart(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT   node_pk PRIMARY KEY (id)
+    UNIQUE (flowchart_id, internal_id)
 );
 
