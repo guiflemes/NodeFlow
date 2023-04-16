@@ -1,13 +1,15 @@
 package adapters
 
-import "flowChart/ports"
+import (
+	"flowChart/domain"
+)
 
 type FlowChartDataAggregate struct {
-	*BaseFlowChartAggregate[ports.Data]
+	*BaseFlowChartAggregate[domain.Data]
 }
 
 func NewFlowChartDataRepo(config *DatabaseConfig) *FlowChartDataAggregate {
 	return &FlowChartDataAggregate{
-		BaseFlowChartAggregate: NewBaseFlowchartAggregate[ports.Data](config),
+		BaseFlowChartAggregate: NewBaseFlowchartAggregate[domain.Data](config),
 	}
 }

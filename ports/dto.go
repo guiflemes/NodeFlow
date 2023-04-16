@@ -1,6 +1,6 @@
 package ports
 
-type Data struct {
+type DataDto struct {
 	Label string `json:"label"`
 }
 
