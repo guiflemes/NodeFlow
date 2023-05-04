@@ -3,7 +3,7 @@ package handlers
 import "flowChart/handlers/command"
 
 type Commands struct {
-	EditFlowChart command.HandlerFlowChartSimpleData
+	EditFlowChart command.HandlerFlowChartUnstructuredData
 }
 
 type Application struct {

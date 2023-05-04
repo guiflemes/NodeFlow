@@ -106,8 +106,8 @@ func (r *BaseFlowChartAggregate[T]) deleteNodes(ctx context.Context, tx *sqlx.Tx
 }
 
 func (r *BaseFlowChartAggregate[T]) createNode(ctx context.Context, tx *sqlx.Tx, flowchartID string, node *domain.Node[T]) error {
-	query := `INSERT into node (internal_id, parent_id, flowchart_id, dragging, selected, position_absolute, height, width, position, data)
-	 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
+	query := `INSERT into node (internal_id, parent_id, flowchart_id, dragging, selected, position_absolute, height, width, position, data, type)
+	 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
 
 	stmt, err := tx.PrepareContext(ctx, query)
 
@@ -129,6 +129,7 @@ func (r *BaseFlowChartAggregate[T]) createNode(ctx context.Context, tx *sqlx.Tx,
 		node.Width,
 		ToJsonB(node.Position),
 		ToJsonB(node.Data),
+		node.Type,
 	); err != nil {
 		return fmt.Errorf("error creating a node: %w", err)
 	}

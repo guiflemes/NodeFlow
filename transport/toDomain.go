@@ -15,7 +15,7 @@ func ToDomain[R comparable, D comparable](flowChart *FlowChartDto[R], dataParse 
 			m.Lock()
 			data := dataParse(n.Data)
 			nodeM[n.Id] = domain.NewNode(n.Id, data, domain.Position{X: n.Position.X, Y: n.Position.Y},
-				n.Width, n.Height, n.Selected, domain.Position{X: n.PositionAbsolute.X, Y: n.PositionAbsolute.Y}, n.Dragging)
+				n.Width, n.Height, n.Selected, domain.Position{X: n.PositionAbsolute.X, Y: n.PositionAbsolute.Y}, n.Dragging, n.Type)
 			m.Unlock()
 		}
 		return nodeM

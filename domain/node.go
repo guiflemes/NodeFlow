@@ -36,13 +36,14 @@ type Node[T comparable] struct {
 	Selected         bool
 	PositionAbsolute Position
 	Dragging         bool
+	Type             string
 	next             *Node[T]
 	previous         *Node[T]
 	parent           *Node[T]
 	children         *Node[T]
 }
 
-func NewNode[T comparable](nodeID string, data T, position Position, width int16, height int16, selected bool, positionAbsolute Position, dragging bool) *Node[T] {
+func NewNode[T comparable](nodeID string, data T, position Position, width int16, height int16, selected bool, positionAbsolute Position, dragging bool, typeNode string) *Node[T] {
 	return &Node[T]{
 		NodeID:           nodeID,
 		Data:             data,
@@ -52,6 +53,7 @@ func NewNode[T comparable](nodeID string, data T, position Position, width int16
 		Selected:         selected,
 		PositionAbsolute: positionAbsolute,
 		Dragging:         dragging,
+		Type:             typeNode,
 	}
 }
 

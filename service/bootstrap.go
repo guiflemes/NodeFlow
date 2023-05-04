@@ -11,9 +11,9 @@ func Bootstrap() handlers.Application {
 	config.Parse()
 	newPsqlClient := NewPostgresDb(config)
 
-	flowChartSimpleDataAgr := adapters.NewFlowChartDataRepo(newPsqlClient)
+	flowChartUnstructuredDataAgr := adapters.NewFlowChartUnstructuredDataAgg(newPsqlClient)
 
-	editFlowChart := command.NewHandlerFlowChartSimpleData(flowChartSimpleDataAgr)
+	editFlowChart := command.NewHandlerFlowChartUnstructuredData(flowChartUnstructuredDataAgr)
 
 	return handlers.Application{
 		Commands: handlers.Commands{

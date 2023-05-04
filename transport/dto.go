@@ -4,6 +4,8 @@ type DataDto struct {
 	Label string `json:"label"`
 }
 
+type UnstructuredDataDto interface{}
+
 type FlowChartDto[T comparable] struct {
 	Title string        `json:"title"`
 	Key   string        `json:"key"`
@@ -25,6 +27,7 @@ type NodeDto[T comparable] struct {
 	Selected         bool        `json:"selected "`
 	PositionAbsolute PositionDto `json:"positionAbsolute"`
 	Dragging         bool        `json:"dragging"`
+	Type             string      `json:"type"`
 }
 
 type EdgeDto struct {

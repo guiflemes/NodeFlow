@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS node (
     internal_id  int NOT NULL,
     parent_id    int DEFAULT 0,
     flowchart_id uuid NOT NULL,
+    type         varchar(30) NOT NULL,
     CONSTRAINT   flowchart_pk FOREIGN KEY (flowchart_id) REFERENCES flowchart(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT   node_pk PRIMARY KEY (id)
 );

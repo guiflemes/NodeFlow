@@ -20,7 +20,7 @@ type HttpServer struct {
 func (h *HttpServer) EditFlowChartSimpleData(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	flowChartDto := &transport.FlowChartDto[transport.DataDto]{}
+	flowChartDto := &transport.FlowChartDto[transport.UnstructuredDataDto]{}
 
 	if err := c.BodyParser(flowChartDto); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(Encode{Success: false, Err: err})
