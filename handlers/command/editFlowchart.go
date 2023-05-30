@@ -35,8 +35,6 @@ func NewEditHandlerFlowChart[R comparable, D comparable](repo FlowCartRepo[D], p
 func (h *EditHandlerFlowChart[R, D]) Handler(ctx context.Context, dto *transport.FlowChartDto[R]) error {
 	domain, err := h.dtoToDomain(dto, h.parseData)
 
-	fmt.Println("lala")
-
 	if err != nil {
 		return fmt.Errorf("error parsing dto to domain %w", err)
 	}
@@ -69,7 +67,7 @@ type HandlerFlowChartUnstructuredData struct {
 	*EditHandlerFlowChart[transport.UnstructuredDataDto, domain.UnstructuredDataDomain]
 }
 
-func NewHandlerFlowChartUnstructuredData(agr *adapters.FlowChartUnstructuredDataAgg) HandlerFlowChartUnstructuredData {
+func NewHandlerFlowChartUnstructuredData(agr *adapters.WriteFlowChartUnstructuredDataAgg) HandlerFlowChartUnstructuredData {
 	return HandlerFlowChartUnstructuredData{
 		NewEditHandlerFlowChart[transport.UnstructuredDataDto, domain.UnstructuredDataDomain](agr,
 			func(request transport.UnstructuredDataDto) domain.UnstructuredDataDomain {

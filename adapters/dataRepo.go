@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// use as example
 type FlowChartDataAggregate struct {
 	*BaseFlowChartAggregate[domain.Data]
 }

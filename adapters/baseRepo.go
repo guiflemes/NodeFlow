@@ -11,17 +11,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type NodeError []error
-
-func (e *NodeError) Error() string {
-	return ""
-}
-
-type BaseFlowChartAggregate[T comparable] struct {
+type BaseFlowChartAggregate[T any] struct {
 	client *sqlx.DB
 }
 
-func NewBaseFlowchartAggregate[T comparable](db *sqlx.DB) *BaseFlowChartAggregate[T] {
+func NewBaseFlowchartAggregate[T any](db *sqlx.DB) *BaseFlowChartAggregate[T] {
 	return &BaseFlowChartAggregate[T]{
 		client: db,
 	}
@@ -124,10 +118,10 @@ func (r *BaseFlowChartAggregate[T]) createNode(ctx context.Context, tx *sqlx.Tx,
 		flowchartID,
 		node.Dragging,
 		node.Selected,
-		ToJsonB(node.PositionAbsolute),
+		node.PositionAbsolute,
 		node.Height,
 		node.Width,
-		ToJsonB(node.Position),
+		node.Position,
 		ToJsonB(node.Data),
 		node.Type,
 	); err != nil {
@@ -197,131 +191,82 @@ func (r *BaseFlowChartAggregate[T]) RunInTransaction(ctx context.Context, txFunc
 	return nil
 }
 
-// func (r *BaseFlowChartAggregate[T]) undoNode(ctx context.Context, flowchartID string, internal_id string) error {
-// 	query := "DELETE FROM node WHERE flowchart_id=$1 AND internal_id=$2"
+func (r *BaseFlowChartAggregate[T]) GetFlowChart(ctx context.Context, key string) (*FlowChartModel[T], error) {
+	query := `
+	SELECT
+		flow.id,
+		flow.title,
+		flow.key,
+		node.internal_id,
+		node.parent_id,
+		node.position,
+  		node.data,
+		node.width,
+		node.height,
+		node.position_absolute,
+		node.selected,
+		node.dragging,
+		node.type
+	FROM
+		node
+	JOIN
+		(
+		SELECT *
+		FROM flowchart
+		WHERE flowchart.key = $1
+	) as flow
+	ON
+	flow.id = node.flowchart_id
+	`
 
-// 	stmt, err := r.client.PrepareContext(ctx, query)
+	flow := &FlowChartModel[T]{}
 
-// 	if err != nil {
-// 		return fmt.Errorf("error preparing stmt to delete a node: %w", err)
-// 	}
+	rows, err := r.client.QueryxContext(ctx, query, key)
 
-// 	if _, err := stmt.ExecContext(ctx, flowchartID, internal_id); err != nil {
-// 		return fmt.Errorf("error deleting a node: %w", err)
-// 	}
+	if err != nil {
+		return flow, fmt.Errorf("error querying a flowchart: %w", err)
+	}
 
-// 	return nil
-// }
+	for rows.Next() {
+		node := &NodeModel[T]{}
+		var (
+			flowchartID    string
+			flowchartTitle string
+			flowchartKey   string
+		)
+		if err := rows.Err(); err != nil {
+			return flow, fmt.Errorf("error querying a flowchart %w", err)
+		}
 
-// func (r *BaseFlowChartAggregate[T]) createOrUpdateNode(ctx context.Context, flowChart *domain.FlowChart[T]) error {
+		err := rows.Scan(
+			&flowchartID,
+			&flowchartTitle,
+			&flowchartKey,
+			&node.NodeID,
+			&node.ParentID,
+			&node.Position,
+			&node.Data,
+			&node.Width,
+			&node.Height,
+			&node.PositionAbsolute,
+			&node.Selected,
+			&node.Dragging,
+			&node.Type,
+		)
+		if err != nil {
+			return flow, fmt.Errorf("error querying a flowchart %w", err)
+		}
 
-// 	saveFunc := func(n *domain.Node[T]) *NodeError {
+		if flow.ID == "" {
+			flow.ID = flowchartID
+			flow.Title = flowchartTitle
+			flow.Key = flowchartKey
+		}
 
-// 		exists, err := r.nodeExists(ctx, flowChart.Id, n)
+		flow.AddNode(node)
 
-// 		if err != nil {
-// 			return err
-// 		}
+	}
 
-// 		if exists {
-// 			return r.updateNode(ctx, flowChart.Id, n)
-// 		}
+	return flow, nil
 
-// 		return r.createNode(ctx, flowChart.Id, n)
-// 	}
-
-// 	undo := make([]*domain.Node[T], 0)
-
-// 	flowChart.Node.Traverse(domain.TraversePreOrder, domain.TraverseAll, -1, func(n *domain.Node[T]) bool {
-// 		err := saveFunc(n)
-
-// 		if err != nil {
-// 			logrus.Info(fmt.Sprintf("Stop traversing the tree to node %s, err: %s", n.NodeID, err))
-
-// 			if err.code == CreateErr {
-// 				logrus.Info(fmt.Sprintf("Error on node creating, undo node  %s and its children", n.NodeID))
-// 				undo = append(undo, n)
-// 			}
-// 			return true
-// 		}
-
-// 		return false
-// 	})
-
-// 	if len(undo) > 0 {
-// 		var wg sync.WaitGroup
-// 		for _, n := range undo {
-// 			wg.Add(1)
-// 			go func(nodeID string) {
-// 				defer wg.Done()
-// 				r.undoNode(ctx, flowChart.Id, nodeID)
-// 			}(n.NodeID)
-// 		}
-// 		wg.Wait()
-// 	}
-
-// 	return nil
-
-// }
-
-// func (r *BaseFlowChartAggregate[T]) nodeExists(ctx context.Context, flowchartID string, node *domain.Node[T]) (bool, *NodeError) {
-// 	var id string
-// 	query := "SELECT id FROM node WHERE flowchart_id=$1 AND internal_id=$2"
-
-// 	err := r.client.QueryRowContext(ctx, query, flowchartID, node.NodeID).Scan(&id)
-
-// 	if err == nil {
-// 		return id != "", nil
-// 	}
-
-// 	if err.Error() == "sql: no rows in result set" {
-// 		return false, nil
-// 	}
-
-// 	logrus.WithError(err)
-// 	return false, &NodeError{err: fmt.Errorf("error checking if node exists: %w", err), code: GetErr}
-// }
-
-// func (r *BaseFlowChartAggregate[T]) updateNode(ctx context.Context, flowchartID string, node *domain.Node[T]) *NodeError {
-// 	// TODO VER PQ NAO ATUALIZA
-// 	query := `
-// 	UPDATE node set
-// 	parent_id=$3,
-// 	dragging=$4,
-// 	selected=$5,
-// 	position_absolute=$6,
-// 	height=$7,
-// 	width=$8,
-// 	position=$9,
-// 	data=$10
-// 	WHERE id=$1 AND internal_id=$2`
-
-// 	stmt, err := r.client.PrepareContext(ctx, query)
-
-// 	if err != nil {
-// 		return &NodeError{err: fmt.Errorf("error preparing stmt to update a node: %w", err), code: UpdateErr}
-// 	}
-
-// 	result, err := stmt.ExecContext(ctx,
-// 		flowchartID,
-// 		node.NodeID,
-// 		node.ParentId(),
-// 		node.Dragging,
-// 		node.Selected,
-// 		ToJsonB(node.PositionAbsolute),
-// 		node.Height,
-// 		node.Width,
-// 		ToJsonB(node.Position),
-// 		ToJsonB(node.Data),
-// 	)
-
-// 	if err != nil {
-// 		return &NodeError{err: fmt.Errorf("error updating a node: %w", err), code: UpdateErr}
-// 	}
-
-// 	if rows, err := result.RowsAffected(); rows == 0 {
-// 		return &NodeError{err: fmt.Errorf(`there is no node to the given flowchartID "%s" and nodeID "%s": %w`, flowchartID, node.NodeID, err), code: UpdateErr}
-// 	}
-
-// 	return nil
-// }
+}

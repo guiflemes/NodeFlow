@@ -19,7 +19,8 @@ func RunHttpServer(addr string, application handlers.Application) {
 	httpServer := ports.HttpServer{App: application}
 
 	apiV1 := app.Group("api/v1")
-	apiV1.Post("/flowchart", httpServer.EditFlowChartSimpleData)
+	apiV1.Post("/flowchart", httpServer.EditFlowChartUnstructuredData)
+	apiV1.Get("/flowchart/:key", httpServer.GetFlowChartUnstructuredData)
 
 	logrus.Info("Starting HTTP server")
 	app.Listen(addr)

@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 )
 
@@ -18,7 +20,7 @@ const (
 	TraverseAll  = TraverseLeaves | TraverseNonLeaves
 )
 
-type TraverseFunc[T comparable] func(*Node[T]) bool
+type TraverseFunc[T any] func(*Node[T]) bool
 type TraverseType int
 type TraverseFlags int
 
@@ -27,7 +29,11 @@ type Position struct {
 	Y float64
 }
 
-type Node[T comparable] struct {
+func (p Position) Value() (driver.Value, error) {
+	return json.Marshal(p)
+}
+
+type Node[T any] struct {
 	NodeID           string
 	Data             T
 	Position         Position
@@ -43,7 +49,7 @@ type Node[T comparable] struct {
 	children         *Node[T]
 }
 
-func NewNode[T comparable](nodeID string, data T, position Position, width int16, height int16, selected bool, positionAbsolute Position, dragging bool, typeNode string) *Node[T] {
+func NewNode[T any](nodeID string, data T, position Position, width int16, height int16, selected bool, positionAbsolute Position, dragging bool, typeNode string) *Node[T] {
 	return &Node[T]{
 		NodeID:           nodeID,
 		Data:             data,

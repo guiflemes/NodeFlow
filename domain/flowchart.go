@@ -1,6 +1,6 @@
 package domain
 
-type FlowChart[T comparable] struct {
+type FlowChart[T any] struct {
 	Id    string
 	Title string
 	Key   string

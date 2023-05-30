@@ -24,7 +24,7 @@ type NodeDto[T comparable] struct {
 	Data             T           `json:"data"`
 	Width            int16       `json:"width"`
 	Height           int16       `json:"height"`
-	Selected         bool        `json:"selected "`
+	Selected         bool        `json:"selected"`
 	PositionAbsolute PositionDto `json:"positionAbsolute"`
 	Dragging         bool        `json:"dragging"`
 	Type             string      `json:"type"`
