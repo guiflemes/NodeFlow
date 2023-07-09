@@ -119,12 +119,10 @@ func (n *Node[T]) GetRoot() (*Node[T], int) {
 }
 
 func (n *Node[T]) traversePreOrder(flags TraverseFlags, traverseFunc TraverseFunc[T]) bool {
-	// First, apply the function to the current node if the flag is set
 	if flags&TraverseNonLeaves != 0 && traverseFunc(n) {
 		return true
 	}
 
-	// Traverse the children recursively
 	child := n.children
 	for child != nil {
 		if child.traversePreOrder(flags, traverseFunc) {
@@ -133,7 +131,6 @@ func (n *Node[T]) traversePreOrder(flags TraverseFlags, traverseFunc TraverseFun
 		child = child.next
 	}
 
-	// If the flag is set, apply the function to the current node again
 	if flags&TraverseNonLeaves == 0 && traverseFunc(n) {
 		return true
 	}
